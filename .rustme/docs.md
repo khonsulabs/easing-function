@@ -29,8 +29,7 @@ collection.
 The [`EasingFunction`][easingfunction] type is the central type of this crate. It allows
 defining an easing function in two ways:
 
-- [`EasingFunction::from_fn`][from_fn]: Creates an easing function from a `fn(f32) ->
-      f32` function.
+- [`EasingFunction::from_fn`][from_fn]: Creates an easing function from a `fn(f32) -> f32` function.
 - [`EasingFunction::new`][new]: Creates an easing function from an [`Easing`][easing]
       implementor.
 

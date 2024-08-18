@@ -70,3 +70,12 @@ pub trait Easing: Debug + Send + Sync + 'static {
     /// need to be bounded between zero and one.
     fn ease(&self, progress: f32) -> f32;
 }
+
+impl<T> Easing for T
+where
+    T: Fn(f32) -> f32 + Debug + Send + Sync + 'static,
+{
+    fn ease(&self, progress: f32) -> f32 {
+        self(progress)
+    }
+}
