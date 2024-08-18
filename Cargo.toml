@@ -3,6 +3,12 @@ name = "easing-function"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.65.0"
+description = "A Rusty implementation of easing functions for animation tweening"
+repository = "https://github.com/khonsulabs/easing-function"
+license = "MIT OR Apache-2.0"
+keywords = ["easing", "tweening"]
+categories = ["algorithms"]
+readme = "./README.md"
 
 [features]
 serde = ["dep:serde"]
