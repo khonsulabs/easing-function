@@ -436,63 +436,25 @@
 <a href="#436" id="436">436</a>
 <a href="#437" id="437">437</a>
 <a href="#438" id="438">438</a>
-<a href="#439" id="439">439</a>
-<a href="#440" id="440">440</a>
-<a href="#441" id="441">441</a>
-<a href="#442" id="442">442</a>
-<a href="#443" id="443">443</a>
-<a href="#444" id="444">444</a>
-<a href="#445" id="445">445</a>
-<a href="#446" id="446">446</a>
-<a href="#447" id="447">447</a>
-<a href="#448" id="448">448</a>
-<a href="#449" id="449">449</a>
-<a href="#450" id="450">450</a>
-<a href="#451" id="451">451</a>
-<a href="#452" id="452">452</a>
-<a href="#453" id="453">453</a>
-<a href="#454" id="454">454</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Built-in [`Easing`] implementations.
 
 </span><span class="kw">use </span>core::f32::consts::PI;
 
 <span class="kw">use crate</span>::{Easing, EasingFunction, EasingKind};
 
-<span class="doccomment">/// An [`Easing`] function that produces a steady, linear transition.
-</span><span class="attr">#[derive(Clone, Copy, Debug)]
-</span><span class="kw">pub struct </span>Linear;
-
-<span class="kw">impl </span>Linear {
-    <span class="kw">pub fn </span>ease(progress: f32) -&gt; f32 {
-        progress
-    }
-}
-
-<span class="kw">impl </span>Easing <span class="kw">for </span>Linear {
-    <span class="kw">fn </span>ease(<span class="kw-2">&amp;</span><span class="self">self</span>, progress: f32) -&gt; f32 {
-        progress
-    }
-}
-
-<span class="kw">impl </span>From&lt;Linear&gt; <span class="kw">for </span>EasingFunction {
-    <span class="kw">fn </span>from(<span class="kw">_</span>: Linear) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::from_fn(Linear::ease)
-    }
-}
-
 <span class="macro">macro_rules!</span> declare_easing_function {
-    (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$anchor_name</span>:ident, <span class="macro-nonterminal">$description</span>:literal, <span class="macro-nonterminal">$closure</span>:expr) =&gt; {
+    (<span class="macro-nonterminal">$name</span>:ident, $(<span class="macro-nonterminal">$anchor_name</span>:ident)<span class="question-mark">?</span>, <span class="macro-nonterminal">$description</span>:literal, <span class="macro-nonterminal">$closure</span>:expr) =&gt; {
         <span class="doccomment">/// An [`Easing`] function that eases
         </span><span class="attr">#[doc = <span class="macro-nonterminal">$description</span>]
-        #[doc = <span class="macro">concat!</span>(<span class="string">".\n\nSee &lt;https://easings.net/#"</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$anchor_name</span>), <span class="string">"&gt; for a visualization and more information."</span>)]
-        #[derive(Clone, Copy, Debug)]
+        </span>$(<span class="attr">#[doc = <span class="macro">concat!</span>(<span class="string">"\n\nSee &lt;https://easings.net/#"</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$anchor_name</span>), <span class="string">"&gt; for a visualization and more information."</span>)]</span>)<span class="question-mark">?
+        </span><span class="attr">#[derive(Clone, Copy, Debug)]
         </span><span class="kw">pub struct </span><span class="macro-nonterminal">$name</span>;
 
         <span class="kw">impl </span><span class="macro-nonterminal">$name </span>{
             <span class="doccomment">/// Eases
             </span><span class="attr">#[doc = <span class="macro-nonterminal">$description</span>]
-            #[doc = <span class="macro">concat!</span>(<span class="string">"\n\nSee &lt;https://easings.net/#"</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$anchor_name</span>), <span class="string">"&gt; for a visualization and more information."</span>)]
-            #[must_use]
+            </span>$(<span class="attr">#[doc = <span class="macro">concat!</span>(<span class="string">"\n\nSee &lt;https://easings.net/#"</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$anchor_name</span>), <span class="string">"&gt; for a visualization and more information."</span>)]</span>)<span class="question-mark">?
+            </span><span class="attr">#[must_use]
             </span><span class="kw">pub fn </span>ease(progress: f32) -&gt; f32 {
                 <span class="kw">let </span>closure = force_closure_type(<span class="macro-nonterminal">$closure</span>);
                 closure(progress)
@@ -514,21 +476,24 @@
 }
 
 <span class="macro">macro_rules!</span> declare_easing_functions {
-    ($((<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$anchor_name</span>:ident, <span class="macro-nonterminal">$name_no_ease</span>:ident, <span class="macro-nonterminal">$description</span>:literal, <span class="macro-nonterminal">$closure</span>:expr)),+) =&gt; {
-        <span class="attr">#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+    ($((<span class="macro-nonterminal">$name</span>:ident, $([<span class="macro-nonterminal">$anchor_name</span>:ident],)<span class="question-mark">? </span><span class="macro-nonterminal">$name_no_ease</span>:ident, <span class="macro-nonterminal">$description</span>:literal, <span class="macro-nonterminal">$closure</span>:expr)),+) =&gt; {
+        <span class="doccomment">/// An enumeration of all strandard easings provided.
+        </span><span class="attr">#[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
         #[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Serialize, serde::Deserialize))]
         </span><span class="kw">pub enum </span>StandardEasing {
             $(
                 <span class="doccomment">/// Eases
                 </span><span class="attr">#[doc = <span class="macro-nonterminal">$description</span>]
-                #[doc = <span class="macro">concat!</span>(<span class="string">"\n\nSee &lt;https://easings.net/#"</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$anchor_name</span>), <span class="string">"&gt; for a visualization and more information."</span>)]
-                </span><span class="macro-nonterminal">$name_no_ease
-            </span>),+
+                </span>$(<span class="attr">#[doc = <span class="macro">concat!</span>(<span class="string">"\n\nSee &lt;https://easings.net/#"</span>, <span class="macro">stringify!</span>(<span class="macro-nonterminal">$anchor_name</span>), <span class="string">"&gt; for a visualization and more information."</span>)]</span>)<span class="question-mark">?
+                </span><span class="macro-nonterminal">$name_no_ease</span>,
+            )+
         }
 
         <span class="kw">impl </span>StandardEasing {
-            <span class="kw">pub fn </span>all() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[StandardEasing] {
-                <span class="kw">static </span>ALL: [StandardEasing; <span class="number">30</span>] = [
+            <span class="doccomment">/// Returns a collection of every variant of this enum.
+            </span><span class="attr">#[must_use]
+            </span><span class="kw">pub fn </span>all() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[StandardEasing] {
+                <span class="kw">static </span>ALL: [StandardEasing; <span class="number">31</span>] = [
                     $(StandardEasing::<span class="macro-nonterminal">$name_no_ease</span>),+
                 ];
                 <span class="kw-2">&amp;</span>ALL
@@ -572,12 +537,14 @@
         }
 
         $(
-            <span class="macro">declare_easing_function!</span>(<span class="macro-nonterminal">$name</span>, <span class="macro-nonterminal">$anchor_name</span>, <span class="macro-nonterminal">$description</span>, <span class="macro-nonterminal">$closure</span>);
+            <span class="macro">declare_easing_function!</span>(<span class="macro-nonterminal">$name</span>, $(<span class="macro-nonterminal">$anchor_name</span>)<span class="question-mark">?</span>, <span class="macro-nonterminal">$description</span>, <span class="macro-nonterminal">$closure</span>);
         )+
     };
 }
 
-<span class="attr">#[derive(Debug, Clone, PartialEq)]
+<span class="doccomment">/// An error returned from [`StandardEasing::try_from`] indicating the
+/// [`EasingFunction`] is not a standard easing function.
+</span><span class="attr">#[derive(Debug, Clone, PartialEq)]
 </span><span class="kw">pub struct </span>NonStandardEasing(<span class="kw">pub </span>EasingFunction);
 
 <span class="comment">// This prevents the closures from requiring the parameter to be type annotated.
@@ -588,42 +555,42 @@
 <span class="macro">declare_easing_functions!</span>(
     (
         EaseInSine,
-        easeInSine,
+        [easeInSine],
         InSine,
         <span class="string">"in using a sine wave"</span>,
         |percent| <span class="number">1. </span>- (percent * PI / <span class="number">2.</span>).cos()
     ),
     (
         EaseOutSine,
-        easeOutSine,
+        [easeOutSine],
         OutSine,
         <span class="string">"out using a sine wave"</span>,
         |percent| (percent * PI / <span class="number">2.</span>).sin()
     ),
     (
         EaseInOutSine,
-        easeInOutSine,
+        [easeInOutSine],
         InOutSine,
         <span class="string">"in and out using a sine wave"</span>,
         |percent| -((percent * PI).cos() - <span class="number">1.</span>) / <span class="number">2.
     </span>),
     (
         EaseInQuadradic,
-        easeInQuad,
+        [easeInQuad],
         InQuadradic,
         <span class="string">"in using a quadradic (x^2) curve"</span>,
         squared
     ),
     (
         EaseOutQuadradic,
-        easeOutQuad,
+        [easeOutQuad],
         OutQuadradic,
         <span class="string">"out using a quadradic (x^2) curve"</span>,
         |percent| <span class="number">1. </span>- squared(<span class="number">1. </span>- percent)
     ),
     (
         EaseInOutQuadradic,
-        easeInOutQuad,
+        [easeInOutQuad],
         InOutQuadradic,
         <span class="string">"in and out using a quadradic (x^2) curve"</span>,
         |percent| {
@@ -636,21 +603,21 @@
     ),
     (
         EaseInCubic,
-        easeInCubic,
+        [easeInCubic],
         InCubic,
         <span class="string">"in using a cubic (x^3) curve"</span>,
         cubed
     ),
     (
         EaseOutCubic,
-        easeOutCubic,
+        [easeOutCubic],
         OutCubic,
         <span class="string">"out using a cubic (x^3) curve"</span>,
         |percent| <span class="number">1. </span>- cubed(<span class="number">1. </span>- percent)
     ),
     (
         EaseInOutCubic,
-        easeInOutCubic,
+        [easeInOutCubic],
         InOutCubic,
         <span class="string">"in and out using a cubic (x^3) curve"</span>,
         |percent| {
@@ -663,21 +630,21 @@
     ),
     (
         EaseInQuartic,
-        easeInQuart,
+        [easeInQuart],
         InQuartic,
         <span class="string">"in using a quartic (x^4) curve"</span>,
         quarted
     ),
     (
         EaseOutQuartic,
-        easeOutQuart,
+        [easeOutQuart],
         OutQuartic,
         <span class="string">"out using a quartic (x^4) curve"</span>,
         |percent| <span class="number">1. </span>- quarted(<span class="number">1. </span>- percent)
     ),
     (
         EaseInOutQuartic,
-        easeInOutQuart,
+        [easeInOutQuart],
         InOutQuartic,
         <span class="string">"in and out using a quartic (x^4) curve"</span>,
         |percent| {
@@ -690,21 +657,21 @@
     ),
     (
         EaseInQuintic,
-        easeInQuint,
+        [easeInQuint],
         InQuintic,
         <span class="string">"in using a quintic (x^5) curve"</span>,
         quinted
     ),
     (
         EaseOutQuintic,
-        easeOutQuint,
+        [easeOutQuint],
         OutQuintic,
         <span class="string">"out using a quintic (x^5) curve"</span>,
         |percent| <span class="number">1. </span>- quinted(<span class="number">1. </span>- percent)
     ),
     (
         EaseInOutQuintic,
-        easeInOutQuint,
+        [easeInOutQuint],
         InOutQuintic,
         <span class="string">"in and out using a quintic (x^5) curve"</span>,
         |percent| {
@@ -717,21 +684,21 @@
     ),
     (
         EaseInExponential,
-        easeInExpo,
+        [easeInExpo],
         InExponential,
         <span class="string">"in using an expenential curve"</span>,
         |percent| { <span class="number">2f32</span>.powf(<span class="number">10. </span>* percent - <span class="number">10.</span>) }
     ),
     (
         EaseOutExponential,
-        easeOutExpo,
+        [easeOutExpo],
         OutExponential,
         <span class="string">"out using an expenential curve"</span>,
         |percent| { <span class="number">1. </span>- <span class="number">2f32</span>.powf(-<span class="number">10. </span>* percent) }
     ),
     (
         EaseInOutExponential,
-        easeInOutExpo,
+        [easeInOutExpo],
         InOutExponential,
         <span class="string">"in and out using an expenential curve"</span>,
         |percent| <span class="kw">if </span>percent &lt; <span class="number">0.5 </span>{
@@ -742,21 +709,21 @@
     ),
     (
         EaseInCircular,
-        easeInCirc,
+        [easeInCirc],
         InCircular,
         <span class="string">"in using a curve resembling the top-left arc of a circle"</span>,
         |percent| <span class="number">1. </span>- (<span class="number">1. </span>- squared(percent)).sqrt()
     ),
     (
         EaseOutCircular,
-        easeOutCirc,
+        [easeOutCirc],
         OutCircular,
         <span class="string">"out using a curve resembling the top-left arc of a circle"</span>,
         |percent| (<span class="number">1. </span>- squared(percent - <span class="number">1.</span>)).sqrt()
     ),
     (
         EaseInOutCircular,
-        easeInOutCirc,
+        [easeInOutCirc],
         InOutCircular,
         <span class="string">"in and out using a curve resembling the top-left arc of a circle"</span>,
         |percent| {
@@ -769,7 +736,7 @@
     ),
     (
         EaseInBack,
-        easeInBack,
+        [easeInBack],
         InBack,
         <span class="string">"in using a curve that backs away initially"</span>,
         |percent| {
@@ -780,7 +747,7 @@
     ),
     (
         EaseOutBack,
-        easeOutBack,
+        [easeOutBack],
         OutBack,
         <span class="string">"out using a curve that backs away initially"</span>,
         |percent| {
@@ -792,7 +759,7 @@
     ),
     (
         EaseInOutBack,
-        easeInOutBack,
+        [easeInOutBack],
         InOutBack,
         <span class="string">"in and out using a curve that backs away initially"</span>,
         |percent| {
@@ -805,21 +772,21 @@
     ),
     (
         EaseInElastic,
-        easeInElastic,
+        [easeInElastic],
         InElastic,
         <span class="string">"in using a curve that bounces around the start initially then quickly accelerates"</span>,
         |percent| { -(<span class="number">2f32</span>.powf(<span class="number">10. </span>* percent - <span class="number">10.</span>)) * ((percent * <span class="number">10. </span>- <span class="number">10.75</span>) * C4).sin() }
     ),
     (
         EaseOutElastic,
-        easeOutElastic,
+        [easeOutElastic],
         OutElastic,
         <span class="string">"out using a curve that bounces around the start initially then quickly accelerates"</span>,
         |percent| { <span class="number">2f32</span>.powf(-<span class="number">10. </span>* percent) * ((percent * <span class="number">10. </span>- <span class="number">0.75</span>) * C4).sin() + <span class="number">1. </span>}
     ),
     (
         EaseInOutElastic,
-        easeInOutElastic,
+        [easeInOutElastic],
         InOutElastic,
         <span class="string">"in and out using a curve that bounces around the start initially then quickly accelerates"</span>,
         |percent| <span class="kw">if </span>percent &lt; <span class="number">0.5 </span>{
@@ -830,14 +797,14 @@
     ),
     (
         EaseInBounce,
-        easeInBounce,
+        [easeInBounce],
         InBounce,
         <span class="string">"in using a curve that bounces progressively closer as it progresses"</span>,
         |percent| <span class="number">1. </span>- EaseOutBounce.ease(<span class="number">1. </span>- percent)
     ),
     (
         EaseOutBounce,
-        easeOutBounce,
+        [easeOutBounce],
         OutBounce,
         <span class="string">"out using a curve that bounces progressively closer as it progresses"</span>,
         |percent| {
@@ -860,7 +827,7 @@
     ),
     (
         EaseInOutBounce,
-        easeInOutBounce,
+        [easeInOutBounce],
         InOutBounce,
         <span class="string">"in and out using a curve that bounces progressively closer as it progresses"</span>,
         |percent| {
@@ -870,7 +837,8 @@
                 (<span class="number">1. </span>+ EaseOutBounce::ease(<span class="number">2. </span>* percent - <span class="number">1.</span>)) / <span class="number">2.
             </span>}
         }
-    )
+    ),
+    (Linear, Linear, <span class="string">"linearly"</span>, |percent| percent)
 );
 
 <span class="kw">fn </span>squared(value: f32) -&gt; f32 {

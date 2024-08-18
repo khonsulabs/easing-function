@@ -70,25 +70,9 @@
 <a href="#70" id="70">70</a>
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
-<a href="#73" id="73">73</a>
-<a href="#74" id="74">74</a>
-<a href="#75" id="75">75</a>
-<a href="#76" id="76">76</a>
-<a href="#77" id="77">77</a>
-<a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
-<a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a>
-<a href="#84" id="84">84</a>
-<a href="#85" id="85">85</a>
-<a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
-<a href="#90" id="90">90</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::fmt::Debug;
+</pre></div><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">".crate-docs.md"</span>)]
+</span><span class="kw">use </span>std::fmt::Debug;
+<span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>easings::Linear;
 
@@ -99,15 +83,17 @@
 </span><span class="kw">pub struct </span>EasingFunction(EasingKind);
 
 <span class="kw">impl </span>EasingFunction {
-    <span class="kw">pub fn </span>from_fn(func: <span class="kw">fn</span>(f32) -&gt; f32) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// Returns a new easing function using `func`.
+    </span><span class="kw">pub fn </span>from_fn(func: <span class="kw">fn</span>(f32) -&gt; f32) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(EasingKind::Fn(func))
     }
 
-    <span class="kw">pub fn </span>new&lt;Easing&gt;(easing: Easing) -&gt; <span class="self">Self
+    <span class="doccomment">/// Returns a new easing function using `easing`.
+    </span><span class="kw">pub fn </span>new&lt;Easing&gt;(easing: Easing) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>Easing: <span class="kw">crate</span>::Easing + Debug + Clone,
     {
-        <span class="self">Self</span>(EasingKind::Custom(Box::new(easing)))
+        <span class="self">Self</span>(EasingKind::Custom(Arc::new(easing)))
     }
 }
 
@@ -123,12 +109,12 @@
     }
 }
 
-<span class="attr">#[derive(Debug)]
+<span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">enum </span>EasingKind {
     <span class="doccomment">/// A function pointer to use as an easing function.
     </span>Fn(<span class="kw">fn</span>(f32) -&gt; f32),
     <span class="doccomment">/// A custom easing implementation.
-    </span>Custom(Box&lt;<span class="kw">dyn </span>EasingClone&gt;),
+    </span>Custom(Arc&lt;<span class="kw">dyn </span>Easing&gt;),
 }
 
 <span class="kw">impl </span>Easing <span class="kw">for </span>EasingKind {
@@ -147,28 +133,6 @@
             (<span class="self">Self</span>::Custom(l0), <span class="self">Self</span>::Custom(r0)) =&gt; std::ptr::eq(<span class="kw-2">&amp;**</span>l0, <span class="kw-2">&amp;**</span>r0),
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         }
-    }
-}
-
-<span class="kw">impl </span>Clone <span class="kw">for </span>EasingKind {
-    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-        <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Fn(func) =&gt; <span class="self">Self</span>::Fn(<span class="kw-2">*</span>func),
-            <span class="self">Self</span>::Custom(func) =&gt; <span class="self">Self</span>::Custom(func.clone_boxed()),
-        }
-    }
-}
-
-<span class="kw">trait </span>EasingClone: Debug + Easing {
-    <span class="kw">fn </span>clone_boxed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>EasingClone&gt;;
-}
-
-<span class="kw">impl</span>&lt;T&gt; EasingClone <span class="kw">for </span>T
-<span class="kw">where
-    </span>T: Debug + Clone + Easing,
-{
-    <span class="kw">fn </span>clone_boxed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>EasingClone&gt; {
-        Box::new(<span class="self">self</span>.clone())
     }
 }
 
