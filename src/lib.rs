@@ -1,4 +1,6 @@
+#![doc = include_str!(".crate-docs.md")]
 use std::fmt::Debug;
+use std::sync::Arc;
 
 use easings::Linear;
 
@@ -9,15 +11,17 @@ pub mod easings;
 pub struct EasingFunction(EasingKind);
 
 impl EasingFunction {
+    /// Returns a new easing function using `func`.
     pub fn from_fn(func: fn(f32) -> f32) -> Self {
         Self(EasingKind::Fn(func))
     }
 
+    /// Returns a new easing function using `easing`.
     pub fn new<Easing>(easing: Easing) -> Self
     where
         Easing: crate::Easing + Debug + Clone,
     {
-        Self(EasingKind::Custom(Box::new(easing)))
+        Self(EasingKind::Custom(Arc::new(easing)))
     }
 }
 
@@ -33,12 +37,12 @@ impl Default for EasingFunction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum EasingKind {
     /// A function pointer to use as an easing function.
     Fn(fn(f32) -> f32),
     /// A custom easing implementation.
-    Custom(Box<dyn EasingClone>),
+    Custom(Arc<dyn Easing>),
 }
 
 impl Easing for EasingKind {
@@ -57,28 +61,6 @@ impl PartialEq for EasingKind {
             (Self::Custom(l0), Self::Custom(r0)) => std::ptr::eq(&**l0, &**r0),
             _ => false,
         }
-    }
-}
-
-impl Clone for EasingKind {
-    fn clone(&self) -> Self {
-        match self {
-            Self::Fn(func) => Self::Fn(*func),
-            Self::Custom(func) => Self::Custom(func.clone_boxed()),
-        }
-    }
-}
-
-trait EasingClone: Debug + Easing {
-    fn clone_boxed(&self) -> Box<dyn EasingClone>;
-}
-
-impl<T> EasingClone for T
-where
-    T: Debug + Clone + Easing,
-{
-    fn clone_boxed(&self) -> Box<dyn EasingClone> {
-        Box::new(self.clone())
     }
 }
 
