@@ -109,6 +109,14 @@ macro_rules! declare_easing_functions {
             }
         }
 
+        impl Easing for StandardEasing {
+            fn ease(&self, percent: f32) -> f32 {
+                match self {
+                    $(Self::$name_no_ease => $name::ease(percent)),+
+                }
+            }
+        }
+
         $(
             declare_easing_function!($name, $anchor_name, $description, $closure);
         )+
