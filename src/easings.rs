@@ -255,7 +255,7 @@ declare_easing_functions!(
         "in and out using a quintic (x^5) curve",
         |percent| {
             if percent < 0.5 {
-                8. * quinted(percent)
+                16. * quinted(percent)
             } else {
                 1. - quinted(-2. * percent + 2.) / 2.
             }
