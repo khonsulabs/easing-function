@@ -74,7 +74,7 @@ macro_rules! declare_easing_functions {
 
         impl StandardEasing {
             pub fn all() -> &'static [StandardEasing] {
-                static ALL: [StandardEasing; 28] = [
+                static ALL: [StandardEasing; 30] = [
                     $(StandardEasing::$name_no_ease),+
                 ];
                 &ALL
@@ -133,11 +133,18 @@ fn force_closure_type(f: impl Fn(f32) -> f32) -> impl Fn(f32) -> f32 {
 
 declare_easing_functions!(
     (
+        EaseInSine,
+        easeInSine,
+        InSine,
+        "in using a sine wave",
+        |percent| 1. - (percent * PI / 2.).cos()
+    ),
+    (
         EaseOutSine,
         easeOutSine,
         OutSine,
         "out using a sine wave",
-        |percent| (percent * PI).sin() / 2.
+        |percent| (percent * PI / 2.).sin()
     ),
     (
         EaseInOutSine,
@@ -276,7 +283,7 @@ declare_easing_functions!(
         |percent| if percent < 0.5 {
             2f32.powf(20. * percent - 10.) / 2.
         } else {
-            2. - 2f32.powf(-20. * percent + 10.) / 2.
+            (2. - 2f32.powf(-20. * percent + 10.)) / 2.
         }
     ),
     (
@@ -300,9 +307,9 @@ declare_easing_functions!(
         "in and out using a curve resembling the top-left arc of a circle",
         |percent| {
             if percent < 0.5 {
-                1. - (1. - squared(2. * percent)).sqrt() / 2.
+                (1. - (1. - squared(2. * percent)).sqrt()) / 2.
             } else {
-                (1. - squared(-2. * percent + 2.)).sqrt()
+                ((1. - squared(-2. * percent + 2.)).sqrt() + 1.) / 2.
             }
         }
     ),
@@ -313,7 +320,7 @@ declare_easing_functions!(
         "in using a curve that backs away initially",
         |percent| {
             let squared = squared(percent);
-            let cubed = squared + percent;
+            let cubed = squared * percent;
             C3 * cubed - C1 * squared
         }
     ),
@@ -323,9 +330,10 @@ declare_easing_functions!(
         OutBack,
         "out using a curve that backs away initially",
         |percent| {
-            let squared = squared(percent - 1.);
-            let cubed = squared + percent;
-            1. + C3 * cubed - C1 * squared
+            let percent_minus_one = percent - 1.;
+            let squared = squared(percent_minus_one);
+            let cubed = squared * percent_minus_one;
+            1. + C3 * cubed + C1 * squared
         }
     ),
     (
@@ -346,14 +354,14 @@ declare_easing_functions!(
         easeInElastic,
         InElastic,
         "in using a curve that bounces around the start initially then quickly accelerates",
-        |percent| { -(2f32.powf(10. * percent - 10.) * (percent * 10. - 10.75).sin() * C4) }
+        |percent| { -(2f32.powf(10. * percent - 10.)) * ((percent * 10. - 10.75) * C4).sin() }
     ),
     (
         EaseOutElastic,
         easeOutElastic,
         OutElastic,
         "out using a curve that bounces around the start initially then quickly accelerates",
-        |percent| { 2f32.powf(-10. * percent) * (percent * 10. - 0.75).sin() * C4 + 1. }
+        |percent| { 2f32.powf(-10. * percent) * ((percent * 10. - 0.75) * C4).sin() + 1. }
     ),
     (
         EaseInOutElastic,
@@ -361,9 +369,9 @@ declare_easing_functions!(
         InOutElastic,
         "in and out using a curve that bounces around the start initially then quickly accelerates",
         |percent| if percent < 0.5 {
-            -(2f32.powf(-20. * percent - 10.) * (percent * 20. - 11.125).sin() * C5 / 2.)
+            -(2f32.powf(20. * percent - 10.)) * ((percent * 20. - 11.125) * C5).sin() / 2.
         } else {
-            2f32.powf(-20. * percent + 10.) * (percent * 20. - 11.125).sin() * C5 / 2. + 1.
+            2f32.powf(-20. * percent + 10.) * ((percent * 20. - 11.125) * C5).sin() / 2. + 1.
         }
     ),
     (
@@ -371,7 +379,7 @@ declare_easing_functions!(
         easeInBounce,
         InBounce,
         "in using a curve that bounces progressively closer as it progresses",
-        |percent| 1. - EaseOutBounce.ease(percent)
+        |percent| 1. - EaseOutBounce.ease(1. - percent)
     ),
     (
         EaseOutBounce,
@@ -383,16 +391,29 @@ declare_easing_functions!(
             const D1: f32 = 2.75;
 
             if percent < 1. / D1 {
-                N1 * percent * percent
+                N1 * squared(percent)
             } else if percent < 2. / D1 {
-                let percent = percent - 1.5;
-                N1 * (percent / D1) * percent + 0.75
+                let percent = percent - 1.5 / D1;
+                N1 * squared(percent) + 0.75
             } else if percent < 2.5 / D1 {
-                let percent = percent - 2.25;
-                N1 * (percent / D1) * percent + 0.9375
+                let percent = percent - 2.25 / D1;
+                N1 * squared(percent) + 0.9375
             } else {
-                let percent = percent - 2.625;
-                N1 * (percent / D1) * percent + 0.984_375
+                let percent = percent - 2.625 / D1;
+                N1 * squared(percent) + 0.984_375
+            }
+        }
+    ),
+    (
+        EaseInOutBounce,
+        easeInOutBounce,
+        InOutBounce,
+        "in and out using a curve that bounces progressively closer as it progresses",
+        |percent| {
+            if percent < 0.5 {
+                (1. - EaseOutBounce::ease(1. - 2. * percent)) / 2.
+            } else {
+                (1. + EaseOutBounce::ease(2. * percent - 1.)) / 2.
             }
         }
     )
