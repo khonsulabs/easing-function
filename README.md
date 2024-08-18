@@ -5,7 +5,7 @@
 
 ![easing-function is considered alpha](https://img.shields.io/badge/status-alpha-orange)
 [![crate version](https://img.shields.io/crates/v/muse.svg)](https://crates.io/crates/easing-function)
-[![Documentation for `main`](https://img.shields.io/badge/docs-main-informational)](https://khonsulabs.github.io/easing-function/main/easing_function/)
+[![Documentation for `v0.1.0`](https://img.shields.io/badge/docs-v0.1.0-informational)](https://docs.rs/easing-function/)
 
 A Rusty implementation of easing functions.
 
@@ -41,12 +41,12 @@ This crate also provides the standard set of easing functions in the
 functions through an enumeration. This enum also supports `serde` when enabling
 the `serde` feature of this crate.
 
-[easing]: https://khonsulabs.github.io/easing-function/main/easing_function/trait.Easing.html
-[easingfunction]: https://khonsulabs.github.io/easing-function/main/easing_function/struct.EasingFunction.html
-[new]: https://khonsulabs.github.io/easing-function/main/easing_function/struct.EasingFunction.html#method.new
-[from_fn]: https://khonsulabs.github.io/easing-function/main/easing_function/struct.EasingFunction.html#method.from_fn
-[sine]: https://khonsulabs.github.io/easing-function/main/easing_function/easings/struct.EaseInOutSine.html
-[standard]: https://khonsulabs.github.io/easing-function/main/easing_function/easings/enum.StandardEasing.html
+[easing]: https://docs.rs/easing-function/*/easing_function/trait.Easing.html
+[easingfunction]: https://docs.rs/easing-function/*/easing_function/struct.EasingFunction.html
+[new]: https://docs.rs/easing-function/*/easing_function/struct.EasingFunction.html#method.new
+[from_fn]: https://docs.rs/easing-function/*/easing_function/struct.EasingFunction.html#method.from_fn
+[sine]: https://docs.rs/easing-function/*/easing_function/easings/struct.EaseInOutSine.html
+[standard]: https://docs.rs/easing-function/*/easing_function/easings/enum.StandardEasing.html
 
 
 ## Open-source Licenses
