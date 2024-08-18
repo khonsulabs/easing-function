@@ -2,7 +2,7 @@
 
 use core::f32::consts::PI;
 
-use crate::{Easing, EasingFunction};
+use crate::{Easing, EasingFunction, EasingKind};
 
 /// An [`Easing`] function that produces a steady, linear transition.
 #[derive(Clone, Copy, Debug)]
@@ -37,7 +37,7 @@ macro_rules! declare_easing_function {
         impl $name {
             /// Eases
             #[doc = $description]
-            #[doc = concat!(".\n\nSee <https://easings.net/#", stringify!($anchor_name), "> for a visualization and more information.")]
+            #[doc = concat!("\n\nSee <https://easings.net/#", stringify!($anchor_name), "> for a visualization and more information.")]
             #[must_use]
             pub fn ease(progress: f32) -> f32 {
                 let closure = force_closure_type($closure);
@@ -59,118 +59,349 @@ macro_rules! declare_easing_function {
     };
 }
 
+macro_rules! declare_easing_functions {
+    ($(($name:ident, $anchor_name:ident, $name_no_ease:ident, $description:literal, $closure:expr)),+) => {
+        #[derive(Clone, Copy, Eq, PartialEq, Debug, Hash)]
+        #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+        pub enum StandardEasing {
+            $(
+                /// Eases
+                #[doc = $description]
+                #[doc = concat!("\n\nSee <https://easings.net/#", stringify!($anchor_name), "> for a visualization and more information.")]
+                $name_no_ease
+            ),+
+        }
+
+        impl StandardEasing {
+            pub fn all() -> &'static [StandardEasing] {
+                static ALL: [StandardEasing; 28] = [
+                    $(StandardEasing::$name_no_ease),+
+                ];
+                &ALL
+            }
+        }
+
+        impl From<StandardEasing> for EasingFunction {
+            fn from(easing: StandardEasing) -> Self {
+                match easing {
+                    $(StandardEasing::$name_no_ease => Self::from($name)),+
+                }
+            }
+        }
+
+        impl TryFrom<EasingFunction> for StandardEasing {
+            type Error = NonStandardEasing;
+
+            fn try_from(func: EasingFunction) -> Result<Self, Self::Error> {
+                let EasingKind::Fn(easing_fn) = &func.0 else {
+                    return Err(NonStandardEasing(func))
+                };
+                let easing_fn = *easing_fn as *const fn(f32) -> f32;
+
+                if false {
+                    unreachable!()
+                } $(else
+                if easing_fn == $name::ease as *const fn(f32) -> f32 {
+                     Ok(Self::$name_no_ease)
+                })+ else  {
+                    Err(NonStandardEasing(func))
+                }
+            }
+        }
+
+        $(
+            declare_easing_function!($name, $anchor_name, $description, $closure);
+        )+
+    };
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct NonStandardEasing(pub EasingFunction);
+
 // This prevents the closures from requiring the parameter to be type annotated.
 fn force_closure_type(f: impl Fn(f32) -> f32) -> impl Fn(f32) -> f32 {
     f
 }
 
-declare_easing_function!(
-    EaseOutSine,
-    easeOutSine,
-    "out using a sine wave",
-    |percent| (percent * PI).sin() / 2.
-);
+declare_easing_functions!(
+    (
+        EaseOutSine,
+        easeOutSine,
+        OutSine,
+        "out using a sine wave",
+        |percent| (percent * PI).sin() / 2.
+    ),
+    (
+        EaseInOutSine,
+        easeInOutSine,
+        InOutSine,
+        "in and out using a sine wave",
+        |percent| -((percent * PI).cos() - 1.) / 2.
+    ),
+    (
+        EaseInQuadradic,
+        easeInQuad,
+        InQuadradic,
+        "in using a quadradic (x^2) curve",
+        squared
+    ),
+    (
+        EaseOutQuadradic,
+        easeOutQuad,
+        OutQuadradic,
+        "out using a quadradic (x^2) curve",
+        |percent| 1. - squared(1. - percent)
+    ),
+    (
+        EaseInOutQuadradic,
+        easeInOutQuad,
+        InOutQuadradic,
+        "in and out using a quadradic (x^2) curve",
+        |percent| {
+            if percent < 0.5 {
+                2. * percent * percent
+            } else {
+                1. - squared(-2. * percent + 2.) / 2.
+            }
+        }
+    ),
+    (
+        EaseInCubic,
+        easeInCubic,
+        InCubic,
+        "in using a cubic (x^3) curve",
+        cubed
+    ),
+    (
+        EaseOutCubic,
+        easeOutCubic,
+        OutCubic,
+        "out using a cubic (x^3) curve",
+        |percent| 1. - cubed(1. - percent)
+    ),
+    (
+        EaseInOutCubic,
+        easeInOutCubic,
+        InOutCubic,
+        "in and out using a cubic (x^3) curve",
+        |percent| {
+            if percent < 0.5 {
+                4. * cubed(percent)
+            } else {
+                1. - cubed(-2. * percent + 2.) / 2.
+            }
+        }
+    ),
+    (
+        EaseInQuartic,
+        easeInQuart,
+        InQuartic,
+        "in using a quartic (x^4) curve",
+        quarted
+    ),
+    (
+        EaseOutQuartic,
+        easeOutQuart,
+        OutQuartic,
+        "out using a quartic (x^4) curve",
+        |percent| 1. - quarted(1. - percent)
+    ),
+    (
+        EaseInOutQuartic,
+        easeInOutQuart,
+        InOutQuartic,
+        "in and out using a quartic (x^4) curve",
+        |percent| {
+            if percent < 0.5 {
+                8. * quarted(percent)
+            } else {
+                1. - quarted(-2. * percent + 2.) / 2.
+            }
+        }
+    ),
+    (
+        EaseInQuintic,
+        easeInQuint,
+        InQuintic,
+        "in using a quintic (x^5) curve",
+        quinted
+    ),
+    (
+        EaseOutQuintic,
+        easeOutQuint,
+        OutQuintic,
+        "out using a quintic (x^5) curve",
+        |percent| 1. - quinted(1. - percent)
+    ),
+    (
+        EaseInOutQuintic,
+        easeInOutQuint,
+        InOutQuintic,
+        "in and out using a quintic (x^5) curve",
+        |percent| {
+            if percent < 0.5 {
+                8. * quinted(percent)
+            } else {
+                1. - quinted(-2. * percent + 2.) / 2.
+            }
+        }
+    ),
+    (
+        EaseInExponential,
+        easeInExpo,
+        InExponential,
+        "in using an expenential curve",
+        |percent| { 2f32.powf(10. * percent - 10.) }
+    ),
+    (
+        EaseOutExponential,
+        easeOutExpo,
+        OutExponential,
+        "out using an expenential curve",
+        |percent| { 1. - 2f32.powf(-10. * percent) }
+    ),
+    (
+        EaseInOutExponential,
+        easeInOutExpo,
+        InOutExponential,
+        "in and out using an expenential curve",
+        |percent| if percent < 0.5 {
+            2f32.powf(20. * percent - 10.) / 2.
+        } else {
+            2. - 2f32.powf(-20. * percent + 10.) / 2.
+        }
+    ),
+    (
+        EaseInCircular,
+        easeInCirc,
+        InCircular,
+        "in using a curve resembling the top-left arc of a circle",
+        |percent| 1. - (1. - squared(percent)).sqrt()
+    ),
+    (
+        EaseOutCircular,
+        easeOutCirc,
+        OutCircular,
+        "out using a curve resembling the top-left arc of a circle",
+        |percent| (1. - squared(percent - 1.)).sqrt()
+    ),
+    (
+        EaseInOutCircular,
+        easeInOutCirc,
+        InOutCircular,
+        "in and out using a curve resembling the top-left arc of a circle",
+        |percent| {
+            if percent < 0.5 {
+                1. - (1. - squared(2. * percent)).sqrt() / 2.
+            } else {
+                (1. - squared(-2. * percent + 2.)).sqrt()
+            }
+        }
+    ),
+    (
+        EaseInBack,
+        easeInBack,
+        InBack,
+        "in using a curve that backs away initially",
+        |percent| {
+            let squared = squared(percent);
+            let cubed = squared + percent;
+            C3 * cubed - C1 * squared
+        }
+    ),
+    (
+        EaseOutBack,
+        easeOutBack,
+        OutBack,
+        "out using a curve that backs away initially",
+        |percent| {
+            let squared = squared(percent - 1.);
+            let cubed = squared + percent;
+            1. + C3 * cubed - C1 * squared
+        }
+    ),
+    (
+        EaseInOutBack,
+        easeInOutBack,
+        InOutBack,
+        "in and out using a curve that backs away initially",
+        |percent| {
+            if percent < 0.5 {
+                (squared(2. * percent) * ((C2 + 1.) * 2. * percent - C2)) / 2.
+            } else {
+                (squared(2. * percent - 2.) * ((C2 + 1.) * (percent * 2. - 2.) + C2) + 2.) / 2.
+            }
+        }
+    ),
+    (
+        EaseInElastic,
+        easeInElastic,
+        InElastic,
+        "in using a curve that bounces around the start initially then quickly accelerates",
+        |percent| { -(2f32.powf(10. * percent - 10.) * (percent * 10. - 10.75).sin() * C4) }
+    ),
+    (
+        EaseOutElastic,
+        easeOutElastic,
+        OutElastic,
+        "out using a curve that bounces around the start initially then quickly accelerates",
+        |percent| { 2f32.powf(-10. * percent) * (percent * 10. - 0.75).sin() * C4 + 1. }
+    ),
+    (
+        EaseInOutElastic,
+        easeInOutElastic,
+        InOutElastic,
+        "in and out using a curve that bounces around the start initially then quickly accelerates",
+        |percent| if percent < 0.5 {
+            -(2f32.powf(-20. * percent - 10.) * (percent * 20. - 11.125).sin() * C5 / 2.)
+        } else {
+            2f32.powf(-20. * percent + 10.) * (percent * 20. - 11.125).sin() * C5 / 2. + 1.
+        }
+    ),
+    (
+        EaseInBounce,
+        easeInBounce,
+        InBounce,
+        "in using a curve that bounces progressively closer as it progresses",
+        |percent| 1. - EaseOutBounce.ease(percent)
+    ),
+    (
+        EaseOutBounce,
+        easeOutBounce,
+        OutBounce,
+        "out using a curve that bounces progressively closer as it progresses",
+        |percent| {
+            const N1: f32 = 7.5625;
+            const D1: f32 = 2.75;
 
-declare_easing_function!(
-    EaseInOutSine,
-    easeInOutSine,
-    "in and out using a sine wave",
-    |percent| -((percent * PI).cos() - 1.) / 2.
+            if percent < 1. / D1 {
+                N1 * percent * percent
+            } else if percent < 2. / D1 {
+                let percent = percent - 1.5;
+                N1 * (percent / D1) * percent + 0.75
+            } else if percent < 2.5 / D1 {
+                let percent = percent - 2.25;
+                N1 * (percent / D1) * percent + 0.9375
+            } else {
+                let percent = percent - 2.625;
+                N1 * (percent / D1) * percent + 0.984_375
+            }
+        }
+    )
 );
 
 fn squared(value: f32) -> f32 {
     value * value
 }
 
-declare_easing_function!(
-    EaseInQuadradic,
-    easeInQuad,
-    "in using a quadradic (x^2) curve",
-    squared
-);
-
-declare_easing_function!(
-    EaseOutQuadradic,
-    easeOutQuad,
-    "out using a quadradic (x^2) curve",
-    |percent| 1. - squared(1. - percent)
-);
-
-declare_easing_function!(
-    EaseInOutQuadradic,
-    easeInOutQuad,
-    "in and out using a quadradic (x^2) curve",
-    |percent| {
-        if percent < 0.5 {
-            2. * percent * percent
-        } else {
-            1. - squared(-2. * percent + 2.) / 2.
-        }
-    }
-);
-
 fn cubed(value: f32) -> f32 {
     value * value * value
 }
-
-declare_easing_function!(
-    EaseInCubic,
-    easeInCubic,
-    "in using a cubic (x^3) curve",
-    cubed
-);
-
-declare_easing_function!(
-    EaseOutCubic,
-    easeOutCubic,
-    "out using a cubic (x^3) curve",
-    |percent| 1. - cubed(1. - percent)
-);
-
-declare_easing_function!(
-    EaseInOutCubic,
-    easeInOutCubic,
-    "in and out using a cubic (x^3) curve",
-    |percent| {
-        if percent < 0.5 {
-            4. * cubed(percent)
-        } else {
-            1. - cubed(-2. * percent + 2.) / 2.
-        }
-    }
-);
 
 fn quarted(value: f32) -> f32 {
     let sq = squared(value);
     squared(sq)
 }
-
-declare_easing_function!(
-    EaseInQuartic,
-    easeInQuart,
-    "in using a quartic (x^4) curve",
-    quarted
-);
-
-declare_easing_function!(
-    EaseOutQuartic,
-    easeOutQuart,
-    "out using a quartic (x^4) curve",
-    |percent| 1. - quarted(1. - percent)
-);
-
-declare_easing_function!(
-    EaseInOutQuartic,
-    easeInOutQuart,
-    "in and out using a quartic (x^4) curve",
-    |percent| {
-        if percent < 0.5 {
-            8. * quarted(percent)
-        } else {
-            1. - quarted(-2. * percent + 2.) / 2.
-        }
-    }
-);
 
 fn quinted(value: f32) -> f32 {
     let squared = squared(value);
@@ -178,177 +409,17 @@ fn quinted(value: f32) -> f32 {
     squared * cubed
 }
 
-declare_easing_function!(
-    EaseInQuintic,
-    easeInQuint,
-    "in using a quintic (x^5) curve",
-    quinted
-);
-
-declare_easing_function!(
-    EaseOutQuintic,
-    easeOutQuint,
-    "out using a quintic (x^5) curve",
-    |percent| 1. - quinted(1. - percent)
-);
-
-declare_easing_function!(
-    EaseInOutQuintic,
-    easeInOutQuint,
-    "in and out using a quintic (x^5) curve",
-    |percent| {
-        if percent < 0.5 {
-            8. * quinted(percent)
-        } else {
-            1. - quinted(-2. * percent + 2.) / 2.
-        }
-    }
-);
-
-declare_easing_function!(
-    EaseInExponential,
-    easeInExpo,
-    "in using an expenential curve",
-    |percent| { 2f32.powf(10. * percent - 10.) }
-);
-
-declare_easing_function!(
-    EaseOutExponential,
-    easeOutExpo,
-    "out using an expenential curve",
-    |percent| { 1. - 2f32.powf(-10. * percent) }
-);
-
-declare_easing_function!(
-    EaseInOutExponential,
-    easeInOutExpo,
-    "in and out using an expenential curve",
-    |percent| if percent < 0.5 {
-        2f32.powf(20. * percent - 10.) / 2.
-    } else {
-        2. - 2f32.powf(-20. * percent + 10.) / 2.
-    }
-);
-
-declare_easing_function!(
-    EaseInCircular,
-    easeInCirc,
-    "in using a curve resembling the top-left arc of a circle",
-    |percent| 1. - (1. - squared(percent)).sqrt()
-);
-
-declare_easing_function!(
-    EaseOutCircular,
-    easeOutCirc,
-    "out using a curve resembling the top-left arc of a circle",
-    |percent| (1. - squared(percent - 1.)).sqrt()
-);
-
-declare_easing_function!(
-    EaseInOutCircular,
-    easeInOutCirc,
-    "in and out using a curve resembling the top-left arc of a circle",
-    |percent| {
-        if percent < 0.5 {
-            1. - (1. - squared(2. * percent)).sqrt() / 2.
-        } else {
-            (1. - squared(-2. * percent + 2.)).sqrt()
-        }
-    }
-);
-
 const C1: f32 = 1.70158;
 const C2: f32 = C1 * 1.525;
 const C3: f32 = C1 + 1.;
 const C4: f32 = (2. * PI) / 3.;
 const C5: f32 = (2. * PI) / 4.5;
 
-declare_easing_function!(
-    EaseInBack,
-    easeInBack,
-    "in using a curve that backs away initially",
-    |percent| {
-        let squared = squared(percent);
-        let cubed = squared + percent;
-        C3 * cubed - C1 * squared
+#[test]
+fn roundtrip() {
+    for &easing in StandardEasing::all() {
+        let f = EasingFunction::from(dbg!(easing));
+        let rt = StandardEasing::try_from(f);
+        assert_eq!(rt, Ok(easing));
     }
-);
-
-declare_easing_function!(
-    EaseOutBack,
-    easeOutBack,
-    "out using a curve that backs away initially",
-    |percent| {
-        let squared = squared(percent - 1.);
-        let cubed = squared + percent;
-        1. + C3 * cubed - C1 * squared
-    }
-);
-
-declare_easing_function!(
-    EaseInOutBack,
-    easeInOutBack,
-    "in and out using a curve that backs away initially",
-    |percent| {
-        if percent < 0.5 {
-            (squared(2. * percent) * ((C2 + 1.) * 2. * percent - C2)) / 2.
-        } else {
-            (squared(2. * percent - 2.) * ((C2 + 1.) * (percent * 2. - 2.) + C2) + 2.) / 2.
-        }
-    }
-);
-
-declare_easing_function!(
-    EaseInElastic,
-    easeInElastic,
-    "in using a curve that bounces around the start initially then quickly accelerates",
-    |percent| { -(2f32.powf(10. * percent - 10.) * (percent * 10. - 10.75).sin() * C4) }
-);
-
-declare_easing_function!(
-    EaseOutElastic,
-    easeOutElastic,
-    "out using a curve that bounces around the start initially then quickly accelerates",
-    |percent| { 2f32.powf(-10. * percent) * (percent * 10. - 0.75).sin() * C4 + 1. }
-);
-
-declare_easing_function!(
-    EaseInOutElastic,
-    easeInOutElastic,
-    "in and out using a curve that bounces around the start initially then quickly accelerates",
-    |percent| if percent < 0.5 {
-        -(2f32.powf(-20. * percent - 10.) * (percent * 20. - 11.125).sin() * C5 / 2.)
-    } else {
-        2f32.powf(-20. * percent + 10.) * (percent * 20. - 11.125).sin() * C5 / 2. + 1.
-    }
-);
-
-declare_easing_function!(
-    EaseInBounce,
-    easeInBounce,
-    "in using a curve that bounces progressively closer as it progresses",
-    |percent| 1. - EaseOutBounce.ease(percent)
-);
-
-declare_easing_function!(
-    EaseOutBounce,
-    easeOutBounce,
-    "out using a curve that bounces progressively closer as it progresses",
-    |percent| {
-        const N1: f32 = 7.5625;
-        const D1: f32 = 2.75;
-
-        if percent < 1. / D1 {
-            N1 * percent * percent
-        } else if percent < 2. / D1 {
-            let percent = percent - 1.5;
-            N1 * (percent / D1) * percent + 0.75
-        } else if percent < 2.5 / D1 {
-            let percent = percent - 2.25;
-            N1 * (percent / D1) * percent + 0.9375
-        } else {
-            let percent = percent - 2.625;
-            N1 * (percent / D1) * percent + 0.984_375
-        }
-    }
-);
+}
