@@ -104,6 +104,12 @@ macro_rules! declare_easing_functions {
     };
 }
 
+impl Default for StandardEasing {
+    fn default() -> Self {
+        Self::Linear
+    }
+}
+
 /// An error returned from [`StandardEasing::try_from`] indicating the
 /// [`EasingFunction`] is not a standard easing function.
 #[derive(Debug, Clone, PartialEq)]

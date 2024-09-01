@@ -34,7 +34,7 @@ Configuration(
             "msrv": "1.65",
             "ref-name": (
                 default: "main",
-                release: "v0.1.0",
+                release: "v0.1.1",
             ),
             "docs": (
                 default: "https://khonsulabs.github.io/easing-function/main/easing_function/",
